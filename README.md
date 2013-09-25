@@ -53,6 +53,12 @@ The iOS linter looks for this file and uses it as a reference point for linting 
 
 iOS unit testing leverages the OCUnit testing framework provided within Xcode and is built and executed using [xctool][5]. The unit test engine expects to find a file named `.xctool-args` that exists parallel to an Xcode project. All unit tests per that configuration will be executed; see the xctool documentation for how to configure its execution using this file.
 
+You may specify a `.ocunit-config` file in the root project directory to override the default target for building unit tests, as follows:
+
+```ini
+target="CustomTests"
+```
+
 Android Linting and Unit Testing
 --------------------------------
 

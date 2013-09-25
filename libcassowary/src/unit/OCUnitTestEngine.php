@@ -66,13 +66,16 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
             throw new ArcanistNoEffectException("No tests to run.");
         }
 
+        $target = $this->getUnitTestTarget();
+        $find_target = $target ? " -find-target ".$target : "";
+
         /* Trying to build for every project */
         foreach ($test_paths as $path) {
             chdir($path);
 
             $result_location = tempnam(sys_get_temp_dir(), 'arctestresults.phab');
             exec(phutil_get_library_root("libcassowary").
-              "/../../externals/xctool/xctool.sh -reporter phabricator:".$result_location." test");
+              "/../../externals/xctool/xctool.sh".$find_target." -reporter phabricator:".$result_location." test");
             $xctool_test_results = json_decode(file_get_contents($result_location), true);
             unlink($result_location);
 
@@ -88,11 +91,14 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         $result = null;
         $result_array = array();
 
+        $target = $this->getUnitTestTarget();
+        $build_target = $target ?: "UnitTests";
+
         /* Get build output directory, run gcov, and parse coverage results for all implementations */
         $build_dir_output = array();
         $_ = 0;
         exec("xcodebuild -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $build_dir_output, $_);
-        $build_dir_output[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
+        $build_dir_output[0] .= "/Debug-iphonesimulator/".$build_target.".build/Objects-normal/i386/";
         chdir($build_dir_output[0]);
         exec("gcov * > /dev/null 2> /dev/null");
 
@@ -135,5 +141,21 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         }
 
         return $result_array;
+    }
+
+    /**
+     * Allows you to specify a custom target name for building unit tests.
+     */
+    private function getUnitTestTarget() {
+        $config_path = $this->projectRoot."/.ocunit-config";
+        if (!file_exists($config_path)) {
+            return null;
+        }
+
+        $config = parse_ini_file($config_path);
+        if (!isset($config["target"])) {
+            return null;
+        }
+        return $config["target"];
     }
 }
