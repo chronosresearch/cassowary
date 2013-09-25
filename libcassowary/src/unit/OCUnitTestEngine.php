@@ -66,16 +66,17 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
             throw new ArcanistNoEffectException("No tests to run.");
         }
 
-        $target = $this->getUnitTestTarget();
-        $find_target = $target ? " -find-target ".$target : "";
-
         /* Trying to build for every project */
         foreach ($test_paths as $path) {
             chdir($path);
 
+            $xctool_args = implode(" ", json_decode(file_get_contents(".xctool-args")));
             $result_location = tempnam(sys_get_temp_dir(), 'arctestresults.phab');
-            exec(phutil_get_library_root("libcassowary").
-              "/../../externals/xctool/xctool.sh".$find_target." -reporter phabricator:".$result_location." test");
+            exec(
+              phutil_get_library_root("libcassowary")."/../../externals/xctool/xctool.sh ".
+              $xctool_args." -reporter phabricator:".$result_location.
+              " test ".$this->getSDKOption()
+            );
             $xctool_test_results = json_decode(file_get_contents($result_location), true);
             unlink($result_location);
 
@@ -91,14 +92,11 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         $result = null;
         $result_array = array();
 
-        $target = $this->getUnitTestTarget();
-        $build_target = $target ?: "UnitTests";
-
         /* Get build output directory, run gcov, and parse coverage results for all implementations */
         $build_dir_output = array();
         $_ = 0;
         exec("xcodebuild -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $build_dir_output, $_);
-        $build_dir_output[0] .= "/Debug-iphonesimulator/".$build_target.".build/Objects-normal/i386/";
+        $build_dir_output[0] .= "/Debug-iphonesimulator/".$this->getBuildName().".build/Objects-normal/i386/";
         chdir($build_dir_output[0]);
         exec("gcov * > /dev/null 2> /dev/null");
 
@@ -144,18 +142,33 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
     }
 
     /**
-     * Allows you to specify a custom target name for building unit tests.
+     * Allows you to specify a different build name for locating the build output
+     * after running xcodebuild.
      */
-    private function getUnitTestTarget() {
+    private function getBuildName() {
+        $config = $this->getConfig();
+        if (!isset($config["build-name"])) {
+            return "UnitTests";
+        }
+        return $config["build-name"];
+    }
+
+    /**
+     * Allows you to specify which SDK to test with.
+     */
+    private function getSDKOption() {
+        $config = $this->getConfig();
+        if (!isset($config["test-sdk"])) {
+            return "";
+        }
+        return "-test-sdk ".$config["test-sdk"];
+    }
+
+    private function getConfig() {
         $config_path = $this->projectRoot."/.ocunit-config";
         if (!file_exists($config_path)) {
-            return null;
+            return array();
         }
-
-        $config = parse_ini_file($config_path);
-        if (!isset($config["target"])) {
-            return null;
-        }
-        return $config["target"];
+        return parse_ini_file($config_path);
     }
 }
