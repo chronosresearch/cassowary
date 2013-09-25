@@ -70,12 +70,10 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         foreach ($test_paths as $path) {
             chdir($path);
 
-            $xctool_args = implode(" ", json_decode(file_get_contents(".xctool-args")));
             $result_location = tempnam(sys_get_temp_dir(), 'arctestresults.phab');
             exec(
               phutil_get_library_root("libcassowary")."/../../externals/xctool/xctool.sh ".
-              $xctool_args." -reporter phabricator:".$result_location.
-              " test ".$this->getSDKOption()
+              "-reporter phabricator:".$result_location." test ".$this->getSDKOption()
             );
             $xctool_test_results = json_decode(file_get_contents($result_location), true);
             unlink($result_location);
