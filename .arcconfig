@@ -1,6 +1,6 @@
 {
   "project_id" : "Cassowary",
-  "conduit_uri" : "https://devportal.imobile3.com/",
+  "conduit_uri": "https://phabricator.chronosresearch.com/",
   "lint.engine" : "PhutilLintEngine",
   "unit.engine" : "PhutilUnitTestEngine",
   "load" : [
