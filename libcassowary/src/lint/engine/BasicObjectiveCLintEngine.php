@@ -23,7 +23,7 @@ final class BasicObjectiveCLintEngine extends ArcanistLintEngine {
       }
     }
 
-    $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
+    $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($paths);
 
     $text_paths = preg_grep('/\.(h|m)$/', $paths);
     $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
