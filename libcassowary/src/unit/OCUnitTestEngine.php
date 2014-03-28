@@ -93,7 +93,11 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         /* Get build output directory, run gcov, and parse coverage results for all implementations */
         $build_dir_output = array();
         $_ = 0;
-        exec("xcodebuild -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $build_dir_output, $_);
+        exec("xcodebuild".$this->getXcodebuildOptions()." -showBuildSettings |".
+          "grep PROJECT_TEMP_DIR | grep '".$this->getProjectBuildName()."' -m1".
+          " | grep -o '/.\+$'",
+          $build_dir_output,
+          $_);
         $build_dir_output[0] .= "/Debug-iphonesimulator/".$this->getBuildName().".build/Objects-normal/i386/";
         chdir($build_dir_output[0]);
         exec("gcov * > /dev/null 2> /dev/null");
@@ -144,22 +148,44 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
      * after running xcodebuild.
      */
     private function getBuildName() {
-        $config = $this->getConfig();
-        if (!isset($config["build-name"])) {
-            return "UnitTests";
-        }
-        return $config["build-name"];
+      $build_name = $this->getProperty('build-name');
+      return $this->getProperty('build-name') ? $build_name : 'UnitTests';
     }
 
     /**
      * Allows you to specify which SDK to test with.
      */
     private function getSDKOption() {
-        $config = $this->getConfig();
-        if (!isset($config["test-sdk"])) {
-            return "";
-        }
-        return "-test-sdk ".$config["test-sdk"];
+      $test_sdk = $this->getProperty('test-sdk');
+      return $test_sdk ? '-test-sdk '.$test_sdk : '';
+    }
+
+    /**
+     * These params are used by xcodebuild to identify the location of
+     * the build output.
+     */
+    private function getXcodebuildOptions() {
+      $config = $this->getConfig();
+      if (!isset($config['workspace']) || !isset($config['scheme'])) {
+        return '';
+      }
+      return ' -workspace '.$config['workspace'].' -scheme '.$config['scheme'];
+    }
+
+    /**
+     * The project build name indicates which directory contains the files
+     * generated from the build.
+     */
+    private function getProjectBuildName() {
+      return $this->getProperty('project-build-name');
+    }
+
+    private function getProperty($property) {
+      $config = $this->getConfig();
+      if (!isset($config[$property])) {
+        return '';
+      }
+      return $config[$property];
     }
 
     private function getConfig() {

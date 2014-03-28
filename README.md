@@ -58,6 +58,9 @@ You may specify a `.ocunit-config` file in the root project directory to specify
 ```ini
 build-name=CustomTests
 test-sdk=iphonesimulator7.0
+workspace=Project.xcworkspace
+scheme=CustomScheme
+project-build-name=Project.build
 ```
 
 Android Linting and Unit Testing
