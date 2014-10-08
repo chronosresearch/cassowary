@@ -98,7 +98,8 @@ final class OCUnitTestEngine extends ArcanistUnitTestEngine {
           " | grep -o '/.\+$'",
           $build_dir_output,
           $_);
-        $build_dir_output[0] .= "/Debug-iphonesimulator/".$this->getBuildName().".build/Objects-normal/i386/";
+        $build_dir_output[0] .= '/Debug-iphonesimulator/'.
+          $this->getBuildName().'.build/Objects-normal/x86_64/';
         chdir($build_dir_output[0]);
         exec("gcov * > /dev/null 2> /dev/null");
 
