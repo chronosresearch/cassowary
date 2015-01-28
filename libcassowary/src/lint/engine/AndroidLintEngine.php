@@ -63,7 +63,7 @@ final class AndroidLintEngine extends ArcanistLintEngine {
                     array(
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE
-                    ))->setMaxLineLength(120);
+                    ))->setMaxLineLength(100);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($android_paths);
 
         // locate project directories and run static analysis
