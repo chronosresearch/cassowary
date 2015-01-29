@@ -29,14 +29,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-/**
- * Uses Android Lint to detect various errors in Java code. To use this linter,
- * you must install the Android SDK and configure which codes you want to be
- * reported as errors, warnings and advice.
- *
- * @group linter
- */
-final class ArcanistAndroidLinter extends ArcanistLinter {
+abstract class AbstractArcanistAndroidLinter extends ArcanistLinter {
     private $gradleModules;
 
     public function __construct($modules) {
@@ -44,8 +37,7 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
     }
 
     private function getLintPath() {
-        return '';
-        $lint_bin = "lint";
+        $lint_bin = $_ENV['ANDROID_HOME'].'/sdk/tools/lint';
 
         list($err, $stdout) = exec_manual('which %s', $lint_bin);
         if ($err) {
@@ -68,33 +60,6 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         }
 
         return trim($stdout);
-    }
-
-    private function runGradle($path)
-    {
-        return array();
-        $gradle_bin = join('/', array(rtrim($path, '/'), "gradlew"));
-        if (!file_exists($gradle_bin)) {
-            $gradle_bin = $this->getGradlePath();
-        }
-
-        $cwd = getcwd();
-        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
-        chdir($path_on_disk);
-        $lint_command = '';
-        $output_paths = array();
-        foreach ($this->gradleModules as $module) {
-            $lint_command .= ':'.$module.':lint ';
-            $output_paths[] = $path.'/'.$module.'/build/outputs/lint-results.xml';
-        }
-        list($err) = exec_manual($gradle_bin.' '.$lint_command);
-        chdir($cwd);
-
-        if ($err) {
-            throw new ArcanistUsageException("Error executing gradle command");
-        }
-
-        return $output_paths;
     }
 
     private function runLint($path)
@@ -219,5 +184,49 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         }
 
         putenv('_JAVA_OPTIONS');
+    }
+}
+
+/**
+ * Uses Android Lint to detect various errors in Java code. To use this linter,
+ * you must install the Android SDK and configure which codes you want to be
+ * reported as errors, warnings and advice.
+ *
+ * @group linter
+ */
+final class ArcanistAndroidLinter extends AbstractArcanistAndroidLinter {
+    protected function runGradle($path) {
+        // Use ArcanistFullAndroidLinter to run gradle, as gradle lint can take
+        // awhile to run.
+        return array();
+    }
+}
+
+/**
+ * Like ArcanistAndroidLinter, but also runs gradle lint.
+ *
+ * @group linter
+ */
+final class ArcanistAndroidFullLinter extends AbstractArcanistAndroidLinter {
+    protected function runGradle($path) {
+        $gradle_bin = join('/', array(rtrim($path, '/'), 'gradlew'));
+        if (!file_exists($gradle_bin)) {
+            $gradle_bin = $this->getGradlePath();
+        }
+
+        $cwd = getcwd();
+        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
+        chdir($path_on_disk);
+        $lint_command = '';
+        $lint_command = 'app:lint';
+        $output_paths = array($path.'/app/build/outputs/lint-results.xml');
+        list($err) = exec_manual($gradle_bin.' '.$lint_command);
+        chdir($cwd);
+
+        if ($err) {
+            throw new ArcanistUsageException('Error executing gradle command');
+        }
+
+        return $output_paths;
     }
 }

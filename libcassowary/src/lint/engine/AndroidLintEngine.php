@@ -29,14 +29,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-/**
- * Utilize the Android lint utilities that come with the latest ADT.
- * The engine assumes that the ADT binaries are installed on the user's
- * machine and available on the path.
- *
- * @group linter
- */
-final class AndroidLintEngine extends ArcanistLintEngine {
+abstract class AbstractAndoidLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $linters = array();
         $paths = $this->getPaths();
@@ -119,11 +112,11 @@ final class AndroidLintEngine extends ArcanistLintEngine {
                 }
             }
 
-            $linters[] = id(new ArcanistAndroidLinter(null))
+            $linters[] = id($this->getLinter(null))
                     ->setPaths($eclipse_paths);
 
             foreach ($gradle_path_modules as $path => $modules) {
-                $linters[] = id(new ArcanistAndroidLinter($modules))
+                $linters[] = id($this->getLinter($modules))
                         ->setPaths(array($path));
             }
         }
@@ -138,5 +131,29 @@ final class AndroidLintEngine extends ArcanistLintEngine {
         }
 
         return $linters;
+    }
+}
+
+/**
+ * Utilize the Android lint utilities that come with the latest ADT.
+ * The engine assumes that the ADT binaries are installed on the user's
+ * machine and available on the path.
+ *
+ * @group linter
+ */
+final class AndroidLintEngine extends AbstractAndoidLintEngine {
+    protected function getLinter($modules) {
+        return new ArcanistAndroidLinter($modules);
+    }
+}
+
+/**
+ * Like AndroidLintEngine, but also runs gradle lint.
+ *
+ * @group linter
+ */
+final class AndroidFullLintEngine extends AbstractAndoidLintEngine {
+    protected function getLinter($modules) {
+        return new ArcanistAndroidFullLinter($modules);
     }
 }
