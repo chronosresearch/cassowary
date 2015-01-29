@@ -44,6 +44,7 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
     }
 
     private function getLintPath() {
+        return '';
         $lint_bin = "lint";
 
         list($err, $stdout) = exec_manual('which %s', $lint_bin);
@@ -71,6 +72,7 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
 
     private function runGradle($path)
     {
+        return array();
         $gradle_bin = join('/', array(rtrim($path, '/'), "gradlew"));
         if (!file_exists($gradle_bin)) {
             $gradle_bin = $this->getGradlePath();
