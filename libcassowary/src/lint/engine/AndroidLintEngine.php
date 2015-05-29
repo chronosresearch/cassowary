@@ -38,10 +38,6 @@ abstract class AbstractAndoidLintEngine extends ArcanistLintEngine {
 
         // skip directories and lint only regular files in remaining linters
         foreach ($paths as $key => $path) {
-            if ($this->getCommitHookMode()) {
-                continue;
-            }
-
             if (!is_file($this->getFilePathOnDisk($path))) {
                 unset($paths[$key]);
             }
