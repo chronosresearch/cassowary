@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2012-2014 iMobile3, LLC. All rights reserved.
+Copyright 2012-2015 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -32,7 +32,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 abstract class AbstractArcanistAndroidLinter extends ArcanistLinter {
     private $gradleModules;
 
-    public function __construct($modules) {
+    public function __construct($modules = null) {
         $this->gradleModules = $modules;
     }
 
@@ -60,6 +60,38 @@ abstract class AbstractArcanistAndroidLinter extends ArcanistLinter {
         }
 
         return trim($stdout);
+    }
+
+    private function runGradle($path)
+    {
+        $gradle_bin = join('/', array(rtrim($path, '/'), "gradlew"));
+        if (!file_exists($gradle_bin)) {
+            $gradle_bin = $this->getGradlePath();
+        }
+
+        $cwd = getcwd();
+        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
+        chdir($path_on_disk);
+        $lint_command = '';
+        $output_paths = array();
+        foreach ($this->gradleModules as $module) {
+            $lint_command .= ':'.$module.':lint ';
+            $output_path = $path.'/'.str_replace(':', '/', $module).'/build/outputs/lint-results.xml';
+            if (file_exists($output_path)) {
+                unlink($output_path);
+            }
+            $output_paths[] = $output_path;
+        }
+        exec_manual($gradle_bin.' '.$lint_command);
+        chdir($cwd);
+
+        foreach ($output_paths as $output_path) {
+            if (!file_exists($output_path)) {
+                throw new ArcanistUsageException('Error executing gradle command');
+            }
+        }
+
+        return $output_paths;
     }
 
     private function runLint($path)

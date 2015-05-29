@@ -51,7 +51,11 @@ It may be necessary to edit this script based on your project needs and structur
 
 The iOS linter looks for this file and uses it as a reference point for linting individual files so make sure it exists otherwise no linting will occur.
 
-iOS unit testing leverages the OCUnit testing framework provided within Xcode and is built and executed using [xctool][5]. The unit test engine expects to find a file named `.xctool-args` that exists parallel to an Xcode project. All unit tests per that configuration will be executed; see the xctool documentation for how to configure its execution using this file.
+iOS unit testing leverages the OCUnit testing framework provided within Xcode and is built and executed using [xctool][5]. The unit test engine expects to find a file named `.xctool-args` that exists parallel to an Xcode project. All unit tests per that configuration will be executed; see the `xctool` documentation for how to configure its execution using this file. To install `xctool` just run:
+
+```bash
+brew install xctool
+```
 
 You may specify a `.ocunit-config` file in the root project directory to specify a different build name for locating the output of xcodebuild, and to specify an SDK for testing. A sample file is as follows:
 
@@ -76,7 +80,7 @@ As of right now only basic support is available but simple naming and text compl
 License / Support
 =================
 
-Copyright 2012-2014 iMobile3, LLC. All rights reserved.
+Copyright 2012-2015 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following

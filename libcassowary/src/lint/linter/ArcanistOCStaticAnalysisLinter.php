@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2012-2014 iMobile3, LLC. All rights reserved.
+Copyright 2012-2015 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -40,7 +40,7 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
     }
 
     public function getLinterName() {
-        return 'OCStaticAnalysis';
+        return 'ObjectiveCStaticAnalysisLint';
     }
 
     public function getLintSeverityMap() {
@@ -61,7 +61,7 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
         $stdout = array();
         $_ = 0;
         exec(phutil_get_library_root("libcassowary") .
-        "/../../externals/xctool/xctool.sh -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES",
+        'xctool -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES',
             $stdout, $_);
         foreach ($stdout as $line) {
             $resultItem = json_decode($line, true);
@@ -69,29 +69,36 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
             $matches = array();
             if (isset($resultItem['emittedOutputText']) && $c =
                             preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (\w+(\s+\w+)*)/is",
-                                $resultItem['emittedOutputText'], $matches)
+                                           $resultItem['emittedOutputText'])
             ) {
-                $message = new ArcanistLintMessage();
-                $message->setPath($matches[1][0]);
-                $message->setLine($matches[2][0]);
-                $message->setChar($matches[3][0]);
-                $message->setCode('CLANG');
+                $errors = explode("\n", $resultItem['emittedOutputText']);
 
-                if ($matches[4][0] === "error") {
-                    $message->setSeverity(
-                        ArcanistLintSeverity::SEVERITY_ERROR);
-                } else if ($matches[4][0] === "warning") {
-                    $message->setSeverity(
-                        ArcanistLintSeverity::SEVERITY_WARNING);
-                } else {
-                    $message->setSeverity(
-                        ArcanistLintSeverity::SEVERITY_ADVICE);
+                foreach ($errors as $error) {
+                    if ($c = preg_match_all('/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (.*)/is',
+                                            $error, $matches)) {
+                        $message = new ArcanistLintMessage();
+                        $message->setPath($matches[1][0]);
+                        $message->setLine($matches[2][0]);
+                        $message->setChar($matches[3][0]);
+                        $message->setCode('CLANG');
+
+                        if ($matches[4][0] === 'error') {
+                            $message->setSeverity(
+                                                  ArcanistLintSeverity::SEVERITY_ERROR);
+                        } else if ($matches[4][0] === 'warning') {
+                            $message->setSeverity(
+                                                  ArcanistLintSeverity::SEVERITY_WARNING);
+                        } else {
+                            $message->setSeverity(
+                                                  ArcanistLintSeverity::SEVERITY_ADVICE);
+                        }
+
+                        $message->setName($matches[5][0]);
+                        $message->setDescription($matches[5][0]);
+
+                        $this->addLintMessage($message);
+                    }
                 }
-
-                $message->setName($matches[5][0]);
-                $message->setDescription($matches[5][0]);
-
-                $this->addLintMessage($message);
             }
         }
     }
