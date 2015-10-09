@@ -29,6 +29,10 @@ final class BasicObjectiveCLintEngine extends ArcanistLintEngine {
     $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
     $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
     $linters[] = id(new ArcanistTextLinter())
+      ->setCustomSeverityMap(array(
+        ArcanistTextLinter::LINT_BAD_CHARSET =>
+        ArcanistLintSeverity::SEVERITY_DISABLED,
+      ))
       ->setMaxLineLength(self::MAX_LINE_LENGTH)
       ->setPaths($text_paths);
 
