@@ -51,7 +51,9 @@ abstract class AbstractAndoidLintEngine extends ArcanistLintEngine {
                 ->setCustomSeverityMap(
                     array(
                         ArcanistTextLinter::LINT_LINE_WRAP =>
-                        ArcanistLintSeverity::SEVERITY_ADVICE
+                        ArcanistLintSeverity::SEVERITY_ADVICE,
+                        ArcanistTextLinter::LINT_BAD_CHARSET =>
+                        ArcanistLintSeverity::SEVERITY_DISABLED,
                     ))->setMaxLineLength(100);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($android_paths);
 
