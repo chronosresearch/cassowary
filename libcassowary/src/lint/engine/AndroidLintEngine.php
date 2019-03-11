@@ -54,7 +54,7 @@ abstract class AbstractAndoidLintEngine extends ArcanistLintEngine {
                         ArcanistLintSeverity::SEVERITY_ADVICE,
                         ArcanistTextLinter::LINT_BAD_CHARSET =>
                         ArcanistLintSeverity::SEVERITY_DISABLED,
-                    ))->setMaxLineLength(100);
+                    ))->setMaxLineLength(120);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($android_paths);
 
         // locate project directories and run static analysis
